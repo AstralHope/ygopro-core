@@ -55,7 +55,7 @@ public:
 	card* active_handler;
 	uint16 status;
 	uint32 label;
-	void* label_object;
+	int32 label_object;
 	int32 condition;
 	int32 cost;
 	int32 target;
@@ -90,6 +90,7 @@ public:
 	void get_value(card* pcard, uint32 extraargs, std::vector<int32>* result);
 	void get_value(effect* peffect, uint32 extraargs, std::vector<int32>* result);
 	int32 check_value_condition(uint32 extraargs = 0);
+	void* get_label_object();
 	int32 get_speed();
 	effect* clone();
 	card* get_owner() const;
@@ -181,7 +182,7 @@ enum effect_flag : uint32 {
 	EFFECT_FLAG_NO_TURN_RESET		= 0x400000,
 	EFFECT_FLAG_EVENT_PLAYER		= 0x800000,
 	EFFECT_FLAG_OWNER_RELATE		= 0x1000000,
-	EFFECT_FLAG_AVAILABLE_BD		= 0x2000000,
+//	EFFECT_FLAG_AVAILABLE_BD		= 0x2000000,
 	EFFECT_FLAG_CLIENT_HINT			= 0x4000000,
 //	EFFECT_FLAG_CHAIN_UNIQUE		= 0x8000000,
 //	EFFECT_FLAG_NAGA				= 0x10000000,
