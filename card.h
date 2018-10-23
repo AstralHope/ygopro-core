@@ -100,11 +100,12 @@ public:
 	typedef std::unordered_map<effect*, effect_container::iterator> effect_indexer;
 	typedef std::unordered_set<std::pair<effect*, uint16>, effect_relation_hash> effect_relation;
 	typedef std::unordered_map<card*, uint32> relation_map;
-	typedef std::map<uint16, std::array<uint16, 2> > counter_map;
+	typedef std::map<uint16, std::array<uint16, 2>> counter_map;
 	typedef std::map<uint32, int32> effect_count;
-	class attacker_map : public std::unordered_map<uint16, std::pair<card*, uint32> > {
+	class attacker_map : public std::unordered_map<uint16, std::pair<card*, uint32>> {
 	public:
 		void addcard(card* pcard);
+		uint32 findcard(card* pcard);
 	};
 	struct sendto_param_t {
 		void set(uint8 p, uint8 pos, uint8 loc, uint8 seq = 0) {
@@ -141,6 +142,7 @@ public:
 	uint32 position_param;
 	uint32 spsummon_param;
 	uint32 to_field_param;
+	uint8 attack_announce_count;
 	uint8 direct_attackable;
 	uint8 announce_count;
 	uint8 attacked_count;
@@ -185,7 +187,7 @@ public:
 	effect_set_v immune_effect;
 
 	explicit card(duel* pd);
-	~card();
+	~card() = default;
 	static bool card_operation_sort(card* c1, card* c2);
 	const bool is_extra_deck_monster() { return !!(data.type & (TYPE_FUSION | TYPE_SYNCHRO | TYPE_XYZ | TYPE_LINK)); }
 
@@ -295,6 +297,7 @@ public:
 	int32 fusion_check(group* fusion_m, card* cg, uint32 chkf);
 	void fusion_select(uint8 playerid, group* fusion_m, card* cg, uint32 chkf);
 	int32 check_fusion_substitute(card* fcard);
+	int32 is_not_tuner(card* scard);
 
 	int32 check_unique_code(card* pcard);
 	void get_unique_target(card_set* cset, int32 controler, card* icard = 0);
