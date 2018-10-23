@@ -8,7 +8,6 @@
 #ifndef FIELD_H_
 #define FIELD_H_
 
-#include "memory.h"
 #include "common.h"
 #include "effectset.h"
 #include <vector>
@@ -19,7 +18,6 @@
 #include <functional>
 #include <unordered_map>
 #include <unordered_set>
-#include <cmath>
 
 class card;
 struct card_data;
@@ -160,7 +158,7 @@ struct processor {
 	typedef std::vector<chain> chain_array;
 	typedef std::list<processor_unit> processor_list;
 	typedef std::set<card*, card_sort> card_set;
-	typedef std::set<std::pair<effect*, tevent> > delayed_effect_collection;
+	typedef std::set<std::pair<effect*, tevent>> delayed_effect_collection;
 	struct chain_limit_t {
 		chain_limit_t(int32 f, int32 p): function(f), player(p) {}
 		int32 function;
@@ -192,6 +190,7 @@ struct processor {
 	event_list sub_solving_event;
 	chain_array select_chains;
 	chain_array current_chain;
+	chain_array tmp_chains;
 	chain_list continuous_chain;
 	chain_list solving_continuous;
 	chain_list sub_solving_continuous;
@@ -206,7 +205,6 @@ struct processor {
 	chain_list new_ochain_b;
 	chain_list new_ochain_h;
 	chain_list new_chains;
-	chain_list tmp_chain;
 	delayed_effect_collection delayed_quick_tmp;
 	delayed_effect_collection delayed_quick_break;
 	delayed_effect_collection delayed_quick;
@@ -232,8 +230,8 @@ struct processor {
 	card_set set_group_pre_set;
 	card_set set_group_set;
 	effect_set_v disfield_effects;
-	effect_set_v extram_effects;
-	effect_set_v extras_effects;
+	effect_set_v extra_mzone_effects;
+	effect_set_v extra_szone_effects;
 	std::set<effect*> reseted_effects;
 	std::unordered_map<card*, uint32> readjust_map;
 	std::unordered_set<card*> unique_cards[2];
@@ -241,7 +239,7 @@ struct processor {
 	std::unordered_map<uint32, uint32> effect_count_code_duel;
 	std::unordered_map<uint32, uint32> spsummon_once_map[2];
 	std::unordered_map<uint32, uint32> spsummon_once_map_rst[2];
-	std::multimap<int32, card*, std::greater<int32> > xmaterial_lst;
+	std::multimap<int32, card*, std::greater<int32>> xmaterial_lst;
 	ptr temp_var[4];
 	uint32 global_flag;
 	uint16 pre_field[2];
@@ -314,12 +312,12 @@ struct processor {
 	uint32 hint_timing[2];
 	uint8 current_player;
 	uint8 conti_player;
-	std::unordered_map<uint32, std::pair<uint32, uint32> > summon_counter;
-	std::unordered_map<uint32, std::pair<uint32, uint32> > normalsummon_counter;
-	std::unordered_map<uint32, std::pair<uint32, uint32> > spsummon_counter;
-	std::unordered_map<uint32, std::pair<uint32, uint32> > flipsummon_counter;
-	std::unordered_map<uint32, std::pair<uint32, uint32> > attack_counter;
-	std::unordered_map<uint32, std::pair<uint32, uint32> > chain_counter;
+	std::unordered_map<uint32, std::pair<uint32, uint32>> summon_counter;
+	std::unordered_map<uint32, std::pair<uint32, uint32>> normalsummon_counter;
+	std::unordered_map<uint32, std::pair<uint32, uint32>> spsummon_counter;
+	std::unordered_map<uint32, std::pair<uint32, uint32>> flipsummon_counter;
+	std::unordered_map<uint32, std::pair<uint32, uint32>> attack_counter;
+	std::unordered_map<uint32, std::pair<uint32, uint32>> chain_counter;
 	processor_list recover_damage_reserve;
 	effect_vector dec_count_reserve;
 };
@@ -348,7 +346,7 @@ public:
 
 	static int32 field_used_count[32];
 	explicit field(duel* pduel);
-	~field();
+	~field() = default;
 	void reload_field_info();
 
 	void add_card(uint8 playerid, card* pcard, uint8 location, uint8 sequence, uint8 pzone = FALSE);
@@ -429,7 +427,7 @@ public:
 
 	uint32 get_field_counter(uint8 self, uint8 s, uint8 o, uint16 countertype);
 	int32 effect_replace_check(uint32 code, const tevent& e);
-	int32 get_attack_target(card* pcard, card_vector* v, uint8 chain_attack = FALSE);
+	int32 get_attack_target(card* pcard, card_vector* v, uint8 chain_attack = FALSE, bool select_target = true);
 	bool confirm_attack_target();
 	void attack_all_target_check();
 	int32 check_synchro_material(card* pcard, int32 findex1, int32 findex2, int32 min, int32 max, card* smat, group* mg);
@@ -447,8 +445,8 @@ public:
 	int32 is_player_can_discard_deck_as_cost(uint8 playerid, int32 count);
 	int32 is_player_can_discard_hand(uint8 playerid, card* pcard, effect* peffect, uint32 reason);
 	int32 is_player_can_summon(uint8 playerid);
-	int32 is_player_can_summon(uint32 sumtype, uint8 playerid, card* pcard);
-	int32 is_player_can_mset(uint32 sumtype, uint8 playerid, card* pcard);
+	int32 is_player_can_summon(uint32 sumtype, uint8 playerid, card* pcard, uint8 toplayer);
+	int32 is_player_can_mset(uint32 sumtype, uint8 playerid, card* pcard, uint8 toplayer);
 	int32 is_player_can_sset(uint8 playerid, card* pcard);
 	int32 is_player_can_spsummon(uint8 playerid);
 	int32 is_player_can_spsummon(effect* peffect, uint32 sumtype, uint8 sumpos, uint8 playerid, uint8 toplayer, card* pcard);
@@ -559,11 +557,11 @@ public:
 	int32 special_summon_rule(uint16 step, uint8 sumplayer, card* target, uint32 summon_type);
 	int32 special_summon_step(uint16 step, group* targets, card* target, uint32 zone);
 	int32 special_summon(uint16 step, effect* reason_effect, uint8 reason_player, group* targets, uint32 zone);
-	int32 destroy(uint16 step, group* targets, card* target, uint8 battle);
+	int32 destroy_replace(uint16 step, group* targets, card* target, uint8 battle);
 	int32 destroy(uint16 step, group* targets, effect* reason_effect, uint32 reason, uint8 reason_player);
-	int32 release(uint16 step, group* targets, card* target);
+	int32 release_replace(uint16 step, group* targets, card* target);
 	int32 release(uint16 step, group* targets, effect* reason_effect, uint32 reason, uint8 reason_player);
-	int32 send_to(uint16 step, group* targets, card* target);
+	int32 send_replace(uint16 step, group* targets, card* target);
 	int32 send_to(uint16 step, group* targets, effect* reason_effect, uint32 reason, uint8 reason_player);
 	int32 discard_deck(uint16 step, uint8 playerid, uint8 count, uint32 reason);
 	int32 move_to_field(uint16 step, card* target, uint32 enable, uint32 ret, uint32 is_equip, uint32 zone);
@@ -710,9 +708,9 @@ public:
 #define PROCESSOR_MOVETOFIELD		53
 #define PROCESSOR_CHANGEPOS			54
 #define PROCESSOR_OPERATION_REPLACE	55
-#define PROCESSOR_DESTROY_STEP		56
-#define PROCESSOR_RELEASE_STEP		57
-#define PROCESSOR_SENDTO_STEP		58
+#define PROCESSOR_DESTROY_REPLACE	56
+#define PROCESSOR_RELEASE_REPLACE	57
+#define PROCESSOR_SENDTO_REPLACE	58
 #define PROCESSOR_SUMMON_RULE		60
 #define PROCESSOR_SPSUMMON_RULE		61
 #define PROCESSOR_SPSUMMON			62
