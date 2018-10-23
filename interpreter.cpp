@@ -632,6 +632,9 @@ interpreter::interpreter(duel* pd): coroutines(256) {
 	//extra scripts
 	load_script((char*) "./script/constant.lua");
 	load_script((char*) "./script/utility.lua");
+    
+    //dl rule
+    load_script((char*) "./dlpro/dlpro.lua");
 }
 interpreter::~interpreter() {
 	lua_close(lua_state);
